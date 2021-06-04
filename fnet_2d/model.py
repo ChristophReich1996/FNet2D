@@ -29,11 +29,14 @@ class FNet2D(nn.Module):
                                                             (4, 4),
                                                             (4, 4),
                                                             (4, 4)),
-                 out_features: int = 10) -> None:
+                 out_features: int = 10,
+                 no_fft: bool = False) -> None:
         """
         Constructor method
         :param channels: (Tuple[Tuple[int, int], ...]) Number of in and output channels used in each block
-        :param input_size: (Tuple[int, int]) Input size used for positional embeddings
+        :param embedding_sizes: (Tuple[int, int]) Embedding sizes to be used for each block
+        :param out_features: (int) Output features (classes) to be utilized
+        :param no_fft: (bool) If true no FFT is utilized (used for ablation)
         """
         # Call super constructor
         super(FNet2D, self).__init__()
@@ -77,7 +80,7 @@ class FNet2D_module(nn.Module):
     """
 
     def __init__(self, in_channels: int, out_channels: int, hidden_channels: int, embedding_size: Tuple[int, int],
-                 dropout: float = 0.2, downscale: bool = True) -> None:
+                 dropout: float = 0.2, downscale: bool = True, no_fft: bool = False) -> None:
         """
         Constructor method
         :param in_channels: (int) Number of input channels
@@ -86,9 +89,12 @@ class FNet2D_module(nn.Module):
         :param embedding_size: (Tuple[int, int]) Size of the used embedding
         :param dropout: (float) Dropout rate
         :param downscale: (bool) If true pooling is utilized
+        :param no_fft: (bool) If true no FFT is utilized (used for ablation)
         """
         # Call super constructor
         super(FNet2D_module, self).__init__()
+        # Save parameter
+        self.no_fft = no_fft
         # Init embedding
         self.embedding_vertical = nn.Parameter(torch.randn(1, 1, embedding_size[0]), requires_grad=True)
         self.embedding_horizontal = nn.Parameter(torch.randn(1, 1, embedding_size[1]), requires_grad=True)
@@ -119,7 +125,10 @@ class FNet2D_module(nn.Module):
         # Make embedding
         embedding = torch.einsum("ijk, ijl -> ijkl", self.embedding_vertical, self.embedding_horizontal)
         # Perform 3D fft
-        output_fft = fftn(input + embedding, dim=(1, 2, 3), norm="ortho").real
+        if self.no_fft:
+            output_fft = input + embedding
+        else:
+            output_fft = fftn(input + embedding, dim=(1, 2, 3), norm="ortho").real
         # Perform first normalization
         output_norm_1 = self.normalization_1(output_fft) + input + embedding
         # Perform feed forward network
