@@ -17,7 +17,7 @@ parser.add_argument("--data_parallel", default=False, action="store_true",
                     help="Binary flag. If set data parallel is utilized.")
 parser.add_argument("--epochs", default=250, type=int,
                     help="Number of epochs to perform while training.")
-parser.add_argument("--lr", default=1e-02, type=float,
+parser.add_argument("--lr", default=1e-03, type=float,
                     help="Learning rate to be employed.")
 parser.add_argument("--batch_size", default=256, type=int,
                     help="Number of epochs to perform while training.")
