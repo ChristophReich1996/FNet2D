@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+import torch_optimizer
 import torchvision
 import torchvision.transforms as transforms
 import os
@@ -19,8 +20,9 @@ best_accuracy: float = 0.
 
 # Init transformations
 transform_train = transforms.Compose([
-    transforms.RandomCrop(size=32, padding=4),
+    transforms.RandomCrop(size=32, padding=4, padding_mode="edge"),
     transforms.RandomHorizontalFlip(p=0.5),
+    transforms.RandomGrayscale(p=0.1),
     transforms.ToTensor(),
     transforms.Normalize(mean=(0.4914, 0.4822, 0.4465), std=(0.2023, 0.1994, 0.2010))
 ])
@@ -44,7 +46,7 @@ model.to(device)
 # Init data parallel
 model = nn.DataParallel(model)
 # Init optimizer
-optimizer = torch.optim.AdamW(model.parameters(), lr=1e-03, weight_decay=1e-04)
+optimizer = torch.optim.SGD(model.parameters(), lr=1e-02, momentum=0.9, weight_decay=5e-4)
 # Init learning rate schedule
 lr_schedule = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=200)
 # Init loss function
@@ -91,7 +93,7 @@ def train(epoch: int) -> None:
                                                                      correct_predictions, total))
 
 
-def test(epoch: int):
+def test(epoch: int) -> None:
     """
     Test function
     :param epoch: (int) Number of the current epoch
@@ -146,7 +148,7 @@ def test(epoch: int):
 
 
 if __name__ == '__main__':
-    for epoch in range(1000):
+    for epoch in range(250):
         train(epoch=epoch)
         test(epoch=epoch)
         lr_schedule.step()
