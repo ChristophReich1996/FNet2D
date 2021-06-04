@@ -47,7 +47,7 @@ class FNet2D(nn.Module):
         # Init blocks
         self.blocks = nn.Sequential(
             *[FNet2D_module(in_channels=channel[0], out_channels=channel[1], hidden_channels=2 * channel[1],
-                            downscale=channel[2], embedding_size=embedding_size)
+                            downscale=channel[2], embedding_size=embedding_size, no_fft=no_fft)
               for channel, embedding_size in zip(channels, embedding_sizes)]
         )
         # Init final mapping
