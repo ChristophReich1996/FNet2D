@@ -15,7 +15,7 @@ parser.add_argument("--cuda_devices", default="0, 1", type=str,
                     help="String of cuda device indexes to be used. Indexes must be separated by a comma.")
 parser.add_argument("--data_parallel", default=False, action="store_true",
                     help="Binary flag. If set data parallel is utilized.")
-parser.add_argument("--epochs", default=100, type=int,
+parser.add_argument("--epochs", default=250, type=int,
                     help="Number of epochs to perform while training.")
 parser.add_argument("--lr", default=1e-02, type=float,
                     help="Learning rate to be employed.")
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     test_dataset = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False,
                               num_workers=min(20, args.batch_size), pin_memory=True)
     # Init model
-    model = FNet2D()
+    model = FNet2D(no_fft=args.no_fft)
     print("# parameters", sum([p.numel() for p in model.parameters()]))
     # Model to device
     model.to(args.device)
