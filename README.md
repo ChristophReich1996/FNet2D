@@ -14,7 +14,7 @@ such as spectrograms for (ECG) signal classification could be interesting.
 
 This implementation uses PyTorch 1.8.1 and is tested on an Ubuntu system. To install all required packages run:
 
-``shell script
+```shell script
 pip install -r requirements.txt
 ```
 
