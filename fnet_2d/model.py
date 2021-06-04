@@ -41,8 +41,7 @@ class FNet2D(nn.Module):
         # Call super constructor
         super(FNet2D, self).__init__()
         # Make initial convolutional stem
-        self.convolution_stem = nn.Conv2d(in_channels=3, out_channels=channels[0][0], kernel_size=(7, 7), stride=(1, 1),
-                                          padding=(3, 3), bias=False)
+        self.convolution_stem = nn.Conv2d(in_channels=3, out_channels=channels[0][0], kernel_size=(1, 1), bias=False)
         # Init blocks
         self.blocks = nn.Sequential(
             *[FNet2D_module(in_channels=channel[0], out_channels=channel[1], hidden_channels=2 * channel[1],
