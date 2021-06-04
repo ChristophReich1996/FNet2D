@@ -50,6 +50,8 @@ class ModelWrapper(object):
         Training function
         :param epoch: (int) Number of the current epoch
         """
+        # Model to device
+        self.model.to(self.device)
         # Init progress bar
         self.progress_bar = tqdm(total=(epochs * len(self.training_dataset)))
         # Training loop
@@ -93,6 +95,8 @@ class ModelWrapper(object):
         Test function
         :param epoch: (int) Current epoch
         """
+        # Model to device
+        self.model.to(self.device)
         # Init list to store accuracies and losses
         metrics: List[float] = []
         losses: List[float] = []
