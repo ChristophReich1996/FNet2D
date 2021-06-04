@@ -12,10 +12,12 @@ class FNet2D(nn.Module):
 
     def __init__(self,
                  channels: Tuple[Tuple[int, int], ...] = ((32, 64, True),
-                                                          (64, 128, False),
-                                                          (128, 256, True),
+                                                          (64, 64, False),
+                                                          (64, 256, True),
+                                                          (256, 256, False),
                                                           (256, 256, False),
                                                           (256, 512, True),
+                                                          (512, 512, False),
                                                           (512, 512, False),
                                                           (512, 1024, True)),
                  embedding_sizes: Tuple[Tuple[int, int]] = ((32, 32),
@@ -23,6 +25,8 @@ class FNet2D(nn.Module):
                                                             (16, 16),
                                                             (8, 8),
                                                             (8, 8),
+                                                            (8, 8),
+                                                            (4, 4),
                                                             (4, 4),
                                                             (4, 4)),
                  out_features: int = 10) -> None:
@@ -33,9 +37,10 @@ class FNet2D(nn.Module):
         """
         # Call super constructor
         super(FNet2D, self).__init__()
-        # Make initial convolution
-        self.initial_convolution = nn.Conv2d(in_channels=3, out_channels=channels[0][0], kernel_size=(7, 7),
-                                             stride=(1, 1), padding=(3, 3), bias=True)
+        # Make initial convolutional stem
+        self.convolution_stem = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=channels[0][0], kernel_size=(1, 1), bias=False)
+        )
         # Init blocks
         self.blocks = nn.Sequential(
             *[FNet2D_module(in_channels=channel[0], out_channels=channel[1], hidden_channels=2 * channel[1],
@@ -46,7 +51,7 @@ class FNet2D(nn.Module):
         self.final_mapping = nn.Sequential(
             nn.AdaptiveAvgPool2d(output_size=(1, 1)),
             nn.Flatten(start_dim=1),
-            nn.Linear(in_features=channels[-1][-2], out_features=out_features, bias=True),
+            nn.Linear(in_features=channels[-1][-2], out_features=out_features, bias=False),
         )
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -56,7 +61,7 @@ class FNet2D(nn.Module):
         :return: (torch.Tensor) Output classification of the shape [batch size, classes]
         """
         # Initial mapping
-        output = self.initial_convolution(input)
+        output = self.convolution_stem(input)
         # Perform forward pass of blocks
         output = self.blocks(output)
         # Perform final mapping
@@ -85,22 +90,23 @@ class FNet2D_module(nn.Module):
         # Call super constructor
         super(FNet2D_module, self).__init__()
         # Init embedding
-        self.embedding = nn.Parameter(torch.randn(1, 1, embedding_size[0], embedding_size[1]), requires_grad=True)
+        self.embedding_vertical = nn.Parameter(torch.randn(1, 1, embedding_size[0]), requires_grad=True)
+        self.embedding_horizontal = nn.Parameter(torch.randn(1, 1, embedding_size[1]), requires_grad=True)
         # Init normalization layers
         self.normalization_1 = nn.BatchNorm2d(num_features=in_channels, affine=True, track_running_stats=True)
         self.normalization_2 = nn.BatchNorm2d(num_features=out_channels, affine=True, track_running_stats=True)
         # Init feed forward network
         self.feed_forward = nn.Sequential(
-            nn.Conv2d(in_channels=in_channels, out_channels=hidden_channels, kernel_size=(1, 1), bias=True),
-            nn.PReLU(),
-            nn.Dropout(p=dropout),
-            nn.Conv2d(in_channels=hidden_channels, out_channels=out_channels, kernel_size=(1, 1), bias=True),
-            nn.PReLU(),
-            nn.Dropout(p=dropout)
+            nn.Conv2d(in_channels=in_channels, out_channels=hidden_channels, kernel_size=(1, 1), bias=False),
+            nn.PReLU(num_parameters=hidden_channels),
+            nn.Dropout2d(p=dropout),
+            nn.Conv2d(in_channels=hidden_channels, out_channels=out_channels, kernel_size=(1, 1), bias=False),
+            nn.PReLU(num_parameters=out_channels),
+            nn.Dropout2d(p=dropout)
         )
         # Init skip connection
         self.skip_connection = nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=(1, 1),
-                                         bias=True)
+                                         bias=False)
         # Init pooling layer
         self.pooling = nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2)) if downscale else nn.Identity()
 
@@ -110,10 +116,12 @@ class FNet2D_module(nn.Module):
         :param input: (torch.Tensor) Input tensor of the shape [batch size, in_channels, height, width]
         :return: (torch.Tensor) Output tensor of the shape [batch size, out_channels, height // 2, width // 2]
         """
+        # Make embedding
+        embedding = torch.einsum("ijk, ijl -> ijkl", self.embedding_vertical, self.embedding_horizontal)
         # Perform 3D fft
-        output_fft = fftn(input + self.embedding, dim=(1, 2, 3), norm="ortho").real
+        output_fft = fftn(input + embedding, dim=(1, 2, 3), norm="ortho").real
         # Perform first normalization
-        output_norm_1 = self.normalization_1(output_fft) + input
+        output_norm_1 = self.normalization_1(output_fft) + input + embedding
         # Perform feed forward network
         output_ff = self.feed_forward(output_norm_1)
         # Perform second normalization
@@ -121,11 +129,3 @@ class FNet2D_module(nn.Module):
         # Perform pooling
         output_pooling = self.pooling(output_norm_2)
         return output_pooling
-
-
-if __name__ == '__main__':
-    network = FNet2D().cuda()
-    print(sum([p.numel() for p in network.parameters()]))
-    input = torch.rand(32, 3, 32, 32).cuda()
-    output = network(input)
-    output.sum().backward()
