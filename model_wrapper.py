@@ -124,15 +124,15 @@ class ModelWrapper(object):
         # Save model
         if np.mean(metrics) > self.best_metric:
             # Set new best accuracy
-            best_accuracy = np.mean(metrics)
+            self.best_metric = np.mean(metrics)
             # Print info
-            print("Save best model with accuracy", best_accuracy)
+            print("Save best model with accuracy", self.best_metric)
             # Save model
             self.logger.save_model(
                 model_sate_dict={
                     "model": self.model.module.state_dict()
                     if isinstance(self.model, nn.DataParallel) else self.model.state_dict(),
-                    "acc": best_accuracy,
+                    "acc": self.best_metric,
                     "epoch": epoch + 1,
                     "optimizer": self.optimizer.state_dict()},
                 name="best_model")
