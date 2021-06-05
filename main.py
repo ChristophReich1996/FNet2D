@@ -66,7 +66,7 @@ if __name__ == '__main__':
     if args.data_parallel:
         model = nn.DataParallel(model)
     # Init optimizer
-    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     # Init learning rate schedule
     lr_schedule = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=200)
     # Init loss function
