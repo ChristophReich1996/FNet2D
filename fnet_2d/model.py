@@ -79,7 +79,7 @@ class FNet2D_module(nn.Module):
     """
 
     def __init__(self, in_channels: int, out_channels: int, hidden_channels: int, embedding_size: Tuple[int, int],
-                 dropout: float = 0.2, downscale: bool = True, no_fft: bool = False) -> None:
+                 dropout: float = 0.1, downscale: bool = True, no_fft: bool = False) -> None:
         """
         Constructor method
         :param in_channels: (int) Number of input channels
