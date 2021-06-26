@@ -6,9 +6,8 @@ competitive results on the GLUE benchmark while being highly more computationall
 
 This repository scales the FNet encoder to images. The resulting FNet 2D utilizes an FFT over the feature dimension as 
 well as over the spatial dimensions. The performance of the FNet 2D is evaluated on the CIFAR-10 dataset for image 
-classification. FNet 2D falls somewhat short in terms of classification accuracy but shows a very high computational 
-efficiency. This approach may help further research, especially applying FNet 2D to other 2D data than natural images, 
-such as spectrograms for (ECG) signal classification could be interesting.
+classification.
+
 
 ## Installation
 
@@ -20,9 +19,7 @@ pip install -r requirements.txt
 
 ## Results
 
-## Usage
-
-
+Using Fourier transforms for token mixing does not improve classification accuracy over, using the same model without Fourier transforms.
 
 ```bibtex
 [1] @article{Lee2021,
