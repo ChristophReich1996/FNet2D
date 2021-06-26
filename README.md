@@ -21,6 +21,8 @@ pip install -r requirements.txt
 
 Using Fourier transforms for token mixing does not improve classification accuracy over, using the same model without Fourier transforms.
 
+## References
+
 ```bibtex
 [1] @article{Lee2021,
         title={{FNet: Mixing Tokens with Fourier Transforms}},
