@@ -1,5 +1,7 @@
 # FNet 2D: Scaling Fourier Transform Token Mixing To Vision
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ChristophReich1996/FNet2D/blob/master/LICENSE)
+
 This repository implements a 2D version of the FNet [1] by Lee-Thorp et al. for image classification (CIFAR-10). The original FNet replaces 
 costly self-attention layers with simple but effective Fourier transforms. The resulting FNet model achieves 
 competitive results on the GLUE benchmark while being highly more computationally efficient than BERT.
